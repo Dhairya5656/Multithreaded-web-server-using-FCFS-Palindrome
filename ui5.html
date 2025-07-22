@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>FCFS Palindrome Checker</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(to right, #6a11cb, #2575fc);
+      color: #fff;
+      padding: 40px 20px;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: auto;
+      background: #ffffff10;
+      backdrop-filter: blur(10px);
+      border-radius: 20px;
+      padding: 30px 40px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+      animation: fadeIn 1s ease-in-out;
+    }
+
+    h2 {
+      text-align: center;
+      font-size: 2.5rem;
+      margin-bottom: 30px;
+      color: #fff;
+      text-shadow: 1px 1px 2px #000;
+    }
+
+    button {
+      padding: 12px 24px;
+      background: #00c9ff;
+      color: #fff;
+      font-size: 1.1rem;
+      font-weight: bold;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      margin-bottom: 20px;
+      transition: all 0.3s ease;
+    }
+
+    button:hover {
+      background: #92fe9d;
+      color: #000;
+    }
+
+    input[type="number"] {
+      width: 100%;
+      padding: 14px;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      margin-bottom: 15px;
+    }
+
+    .section-title {
+      font-size: 1.2rem;
+      margin: 20px 0 10px;
+      font-weight: bold;
+      color: #e0e0e0;
+    }
+
+    #clientQueue, #log {
+      background: #ffffff15;
+      border-radius: 12px;
+      padding: 20px;
+      margin-top: 10px;
+      max-height: 250px;
+      overflow-y: auto;
+      color: #fff;
+    }
+
+    .client-btn {
+      display: inline-block;
+      padding: 8px 16px;
+      margin: 6px 4px;
+      border-radius: 20px;
+      background-color: #e0e0e0;
+      color: #333;
+      font-weight: bold;
+      transition: all 0.2s ease-in-out;
+    }
+
+    .client-btn:hover {
+      transform: scale(1.05);
+      background-color: #fff;
+    }
+
+    .active-client {
+      background-color: #00e676 !important;
+      color: #000;
+      border: 2px solid #fff;
+    }
+
+    .log-entry {
+      padding: 10px;
+      border-bottom: 1px solid #ffffff22;
+      background: #ffffff10;
+      border-radius: 8px;
+      margin-bottom: 10px;
+    }
+
+    .log-entry:last-child {
+      border-bottom: none;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #ffffff44;
+      border-radius: 10px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>FCFS Palindrome Checker 🚀</h2>
+
+    <button onclick="simulateClient()">+ Simulate Client</button>
+
+    <div class="section-title">Enter a number to check for palindrome:</div>
+    <input type="number" id="palindromeInput" placeholder="Enter number" disabled />
+    <button onclick="checkPalindrome()" id="checkBtn" disabled>✅ Check Palindrome</button>
+
+    <div class="section-title">🧍 Client Queue</div>
+    <div id="clientQueue"></div>
+
+    <div class="section-title">📜 Request Log</div>
+    <div id="log"></div>
+  </div>
+
+  <script>
+    let queue = [];
+    let clientIdCounter = 0;
+
+    function simulateClient() {
+      if (queue.length >= 10) return alert("Maximum 10 clients allowed.");
+
+      const clientId = clientIdCounter++;
+      queue.push(clientId);
+      renderQueue();
+      if (queue.length === 1) enableInput();
+    }
+
+    function renderQueue() {
+      const queueDiv = document.getElementById("clientQueue");
+      queueDiv.innerHTML = "";
+      queue.forEach((id, idx) => {
+        const btn = document.createElement("span");
+        btn.innerText = `Client ${id}`;
+        btn.className = "client-btn";
+        if (idx === 0) btn.classList.add("active-client");
+        queueDiv.appendChild(btn);
+      });
+    }
+
+    function enableInput() {
+      document.getElementById("palindromeInput").disabled = false;
+      document.getElementById("checkBtn").disabled = false;
+    }
+
+    function disableInput() {
+      document.getElementById("palindromeInput").disabled = true;
+      document.getElementById("checkBtn").disabled = true;
+      document.getElementById("palindromeInput").value = "";
+    }
+
+    async function checkPalindrome() {
+      if (queue.length === 0) return;
+
+      const number = document.getElementById("palindromeInput").value;
+      if (!number) return alert("Please enter a number.");
+
+      const clientId = queue[0];
+
+      const response = await fetch(`/check-palindrome?clientId=${clientId}&number=${number}`);
+      const result = await response.json();
+
+      const logEntry = `
+        <div class="log-entry">
+          <strong>Client ${result.clientId}</strong> entered <strong>${result.number}</strong> —
+          Palindrome: <strong style="color:${result.isPalindrome ? '#00e676' : '#ff1744'}">
+          ${result.isPalindrome}</strong>,
+          ⏱️ Time: <strong>${result.timeTaken} ms</strong>,
+          🧵 Thread ID: <strong>${result.threadId}</strong>
+        </div>`;
+      document.getElementById("log").innerHTML += logEntry;
+
+      queue.shift();
+      renderQueue();
+
+      if (queue.length > 0) enableInput();
+      else disableInput();
+    }
+  </script>
+</body>
+</html>
